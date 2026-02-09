@@ -114,13 +114,6 @@ $RECYCLE.BIN/
 logs/
 *.log
 
-# Models (if caching models)
-models/
-*.bin
-*.pt
-*.pth
-*.onnx
-
 # Temporary files
 tmp/
 temp/
@@ -145,8 +138,6 @@ backup/
 site/
 _build/
 
-# ==================== CI/CD ====================
-.github/workflows/secrets/
 
 # ==================== MONITORING ====================
 # Sentry
@@ -163,8 +154,3 @@ _build/
 *.tar.gz
 *.rar
 
-# Large files
-*.h5
-*.hdf5
-*.pkl
-*.pickle
