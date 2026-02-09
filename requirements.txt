@@ -6,13 +6,13 @@
 fastapi==0.109.0              # Modern web framework
 uvicorn[standard]==0.27.0     # ASGI server
 pydantic==2.5.3               # Data validation
-pydantic-settings==2.1.0      # Settings management
+#pydantic-settings==2.1.0      # Settings management
 
 # ==================== RAG & ML ====================
 sentence-transformers==2.3.1  # Embeddings
 chromadb==0.4.22             # Vector database
-numpy==1.26.3                # Numerical computing
-torch==2.2.0                 # PyTorch (for embeddings)
+#numpy==1.26.2
+torch                # PyTorch (for embeddings)
 
 # ==================== LLM (Optional) ====================
 ollama==0.1.6                # Local LLM integration
@@ -26,7 +26,7 @@ gradio==6.0.0                # Web interface
 streamlit==1.30.0            # Alternative UI
 
 # ==================== DATA PROCESSING ====================
-pandas==2.1.4                # Data manipulation
+#pandas==2.1.4                # Data manipulation
 openpyxl==3.1.2             # Excel support
 python-multipart==0.0.6      # File uploads
 
