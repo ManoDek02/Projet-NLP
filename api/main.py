@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     # Initialize services here if needed
     # await initialize_services()
 
-    logger.info("✅ Application ready")
+    logger.info("Application ready")
 
     yield
 
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
     # Cleanup here if needed
     # await cleanup_services()
 
-    logger.info("✅ Cleanup complete")
+    logger.info("Cleanup complete")
 
 
 # Create FastAPI app
