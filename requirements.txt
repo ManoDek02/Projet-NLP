@@ -18,6 +18,8 @@ torch==2.2.0                 # PyTorch (for embeddings)
 ollama==0.1.6                # Local LLM integration
 # openai==1.7.2              # OpenAI API (uncomment if needed)
 # anthropic==0.8.1           # Anthropic API (uncomment if needed)
+groq
+
 
 # ==================== WEB UI ====================
 gradio==6.0.0                # Web interface
