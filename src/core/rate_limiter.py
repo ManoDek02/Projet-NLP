@@ -6,7 +6,6 @@ Implements token bucket algorithm for request rate limiting.
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Optional
 
 from loguru import logger
 
@@ -64,7 +63,7 @@ class RateLimiter:
     def __init__(
         self,
         requests_per_minute: int = 60,
-        burst_size: Optional[int] = None,
+        burst_size: int | None = None,
         enabled: bool = True,
     ):
         """
@@ -203,12 +202,12 @@ class RateLimiter:
 
 
 # Global rate limiter instance
-_rate_limiter: Optional[RateLimiter] = None
+_rate_limiter: RateLimiter | None = None
 
 
 def get_rate_limiter(
     requests_per_minute: int = 100,
-    burst_size: Optional[int] = None,
+    burst_size: int | None = None,
     enabled: bool = True,
 ) -> RateLimiter:
     """

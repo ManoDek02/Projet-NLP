@@ -3,10 +3,10 @@ Conversation Memory Module for multi-turn conversations.
 Maintains context across multiple interactions.
 """
 
+import contextlib
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Optional
 from uuid import uuid4
 
 from loguru import logger
@@ -43,7 +43,7 @@ class ConversationContext:
         self.last_activity = time.time()
         return message
 
-    def get_history(self, max_messages: Optional[int] = None) -> list[Message]:
+    def get_history(self, max_messages: int | None = None) -> list[Message]:
         """Get conversation history."""
         if max_messages:
             return self.messages[-max_messages:]
@@ -121,7 +121,7 @@ class ConversationMemory:
         self._sessions: dict[str, ConversationContext] = {}
         self._session_order: deque = deque()
 
-    def create_session(self, session_id: Optional[str] = None) -> str:
+    def create_session(self, session_id: str | None = None) -> str:
         """
         Create a new conversation session.
 
@@ -145,7 +145,7 @@ class ConversationMemory:
         logger.debug(f"Created conversation session: {session_id}")
         return session_id
 
-    def get_session(self, session_id: str) -> Optional[ConversationContext]:
+    def get_session(self, session_id: str) -> ConversationContext | None:
         """
         Get a conversation session.
 
@@ -167,7 +167,7 @@ class ConversationMemory:
 
         return context
 
-    def get_or_create_session(self, session_id: Optional[str] = None) -> ConversationContext:
+    def get_or_create_session(self, session_id: str | None = None) -> ConversationContext:
         """
         Get existing session or create new one.
 
@@ -191,7 +191,7 @@ class ConversationMemory:
         role: str,
         content: str,
         **metadata,
-    ) -> Optional[Message]:
+    ) -> Message | None:
         """
         Add a message to a session.
 
@@ -226,10 +226,8 @@ class ConversationMemory:
         """
         if session_id in self._sessions:
             del self._sessions[session_id]
-            try:
+            with contextlib.suppress(ValueError):
                 self._session_order.remove(session_id)
-            except ValueError:
-                pass
             logger.debug(f"Deleted conversation session: {session_id}")
             return True
         return False
@@ -265,9 +263,7 @@ class ConversationMemory:
 
     def get_stats(self) -> dict:
         """Get memory statistics."""
-        total_messages = sum(
-            ctx.message_count for ctx in self._sessions.values()
-        )
+        total_messages = sum(ctx.message_count for ctx in self._sessions.values())
         return {
             "active_sessions": len(self._sessions),
             "max_sessions": self.max_sessions,
@@ -285,7 +281,7 @@ class SummarizingMemory:
     def __init__(
         self,
         base_memory: ConversationMemory,
-        summarizer: Optional[callable] = None,
+        summarizer: callable | None = None,
         summary_threshold: int = 10,
         keep_recent: int = 5,
     ):
@@ -351,30 +347,30 @@ class SummarizingMemory:
             return
 
         # Get messages to summarize (all except recent)
-        messages_to_summarize = context.messages[:-self.keep_recent]
+        messages_to_summarize = context.messages[: -self.keep_recent]
 
         if not messages_to_summarize:
             return
 
         # Create text to summarize
-        text = "\n".join(
-            f"{m.role}: {m.content}" for m in messages_to_summarize
-        )
+        text = "\n".join(f"{m.role}: {m.content}" for m in messages_to_summarize)
 
         try:
             summary = self.summarizer(text)
             self._summaries[session_id] = summary
 
             # Remove summarized messages
-            context.messages = context.messages[-self.keep_recent:]
+            context.messages = context.messages[-self.keep_recent :]
 
-            logger.debug(f"Summarized {len(messages_to_summarize)} messages for session {session_id}")
+            logger.debug(
+                f"Summarized {len(messages_to_summarize)} messages for session {session_id}"
+            )
         except Exception as e:
             logger.error(f"Failed to summarize messages: {e}")
 
 
 # Global conversation memory instance
-_conversation_memory: Optional[ConversationMemory] = None
+_conversation_memory: ConversationMemory | None = None
 
 
 def get_conversation_memory(

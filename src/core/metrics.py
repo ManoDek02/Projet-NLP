@@ -4,11 +4,8 @@ Provides Prometheus-compatible metrics for observability.
 """
 
 import time
-from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Optional
-
-from loguru import logger
 
 
 @dataclass
@@ -99,7 +96,7 @@ class Histogram:
 class Timer:
     """Context manager for timing operations."""
 
-    def __init__(self, histogram: Optional[Histogram] = None):
+    def __init__(self, histogram: Histogram | None = None):
         self.histogram = histogram
         self.start_time: float = 0
         self.elapsed: float = 0
@@ -131,76 +128,31 @@ class MetricsRegistry:
     def _init_default_metrics(self) -> None:
         """Initialize default application metrics."""
         # Request metrics
-        self.register_counter(
-            "http_requests_total",
-            "Total HTTP requests"
-        )
-        self.register_counter(
-            "http_requests_errors_total",
-            "Total HTTP request errors"
-        )
-        self.register_histogram(
-            "http_request_duration_seconds",
-            "HTTP request duration in seconds"
-        )
+        self.register_counter("http_requests_total", "Total HTTP requests")
+        self.register_counter("http_requests_errors_total", "Total HTTP request errors")
+        self.register_histogram("http_request_duration_seconds", "HTTP request duration in seconds")
 
         # Chat metrics
-        self.register_counter(
-            "chat_requests_total",
-            "Total chat requests"
-        )
-        self.register_counter(
-            "chat_requests_llm_total",
-            "Total chat requests using LLM"
-        )
-        self.register_histogram(
-            "chat_request_duration_seconds",
-            "Chat request duration in seconds"
-        )
+        self.register_counter("chat_requests_total", "Total chat requests")
+        self.register_counter("chat_requests_llm_total", "Total chat requests using LLM")
+        self.register_histogram("chat_request_duration_seconds", "Chat request duration in seconds")
 
         # Embedding metrics
-        self.register_counter(
-            "embeddings_generated_total",
-            "Total embeddings generated"
-        )
-        self.register_histogram(
-            "embedding_duration_seconds",
-            "Embedding generation duration"
-        )
+        self.register_counter("embeddings_generated_total", "Total embeddings generated")
+        self.register_histogram("embedding_duration_seconds", "Embedding generation duration")
 
         # Search metrics
-        self.register_counter(
-            "vector_searches_total",
-            "Total vector searches"
-        )
-        self.register_histogram(
-            "vector_search_duration_seconds",
-            "Vector search duration"
-        )
+        self.register_counter("vector_searches_total", "Total vector searches")
+        self.register_histogram("vector_search_duration_seconds", "Vector search duration")
 
         # LLM metrics
-        self.register_counter(
-            "llm_requests_total",
-            "Total LLM requests"
-        )
-        self.register_counter(
-            "llm_errors_total",
-            "Total LLM errors"
-        )
-        self.register_histogram(
-            "llm_request_duration_seconds",
-            "LLM request duration"
-        )
+        self.register_counter("llm_requests_total", "Total LLM requests")
+        self.register_counter("llm_errors_total", "Total LLM errors")
+        self.register_histogram("llm_request_duration_seconds", "LLM request duration")
 
         # System metrics
-        self.register_gauge(
-            "vector_store_documents",
-            "Number of documents in vector store"
-        )
-        self.register_gauge(
-            "active_connections",
-            "Number of active connections"
-        )
+        self.register_gauge("vector_store_documents", "Number of documents in vector store")
+        self.register_gauge("active_connections", "Number of active connections")
 
     def register_counter(self, name: str, description: str) -> Counter:
         """Register a new counter metric."""
@@ -215,10 +167,7 @@ class MetricsRegistry:
         return self._gauges[name]
 
     def register_histogram(
-        self,
-        name: str,
-        description: str,
-        buckets: Optional[tuple] = None
+        self, name: str, description: str, buckets: tuple | None = None
     ) -> Histogram:
         """Register a new histogram metric."""
         if name not in self._histograms:
@@ -227,9 +176,7 @@ class MetricsRegistry:
                     name=name, description=description, buckets=buckets
                 )
             else:
-                self._histograms[name] = Histogram(
-                    name=name, description=description
-                )
+                self._histograms[name] = Histogram(name=name, description=description)
         return self._histograms[name]
 
     def counter(self, name: str) -> Counter:
@@ -327,7 +274,7 @@ class MetricsRegistry:
 
 
 # Global metrics registry
-_metrics: Optional[MetricsRegistry] = None
+_metrics: MetricsRegistry | None = None
 
 
 def get_metrics() -> MetricsRegistry:
@@ -348,10 +295,13 @@ def timed(histogram_name: str) -> Callable:
     Returns:
         Decorated function.
     """
+
     def decorator(func: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             metrics = get_metrics()
             with metrics.timer(histogram_name):
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator

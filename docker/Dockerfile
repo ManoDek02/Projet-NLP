@@ -47,24 +47,21 @@ COPY --from=builder /opt/venv /opt/venv
 # Copy application code
 COPY --chown=appuser:appuser src/ src/
 COPY --chown=appuser:appuser api/ api/
-COPY --chown=appuser:appuser ui/ ui/
 COPY --chown=appuser:appuser frontend/ frontend/
 COPY --chown=appuser:appuser scripts/ scripts/
 COPY --chown=appuser:appuser run_api.py .
-COPY --chown=appuser:appuser run_ui.py .
-
-# Copy data (if included in image, otherwise mount volume)
-# COPY --chown=appuser:appuser data/ data/
+COPY --chown=appuser:appuser run_frontend.py .
+COPY --chown=appuser:appuser .env .
 
 # Switch to non-root user
 USER appuser
 
-# Expose ports
+# Expose API port
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/api/v1/health/live')" || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/live')" || exit 1
 
-# Default command (API server)
+# Default command (API server - also serves frontend static files)
 CMD ["python", "run_api.py"]

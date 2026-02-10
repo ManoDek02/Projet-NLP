@@ -2,8 +2,9 @@
 Integration tests for the FastAPI application.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture
@@ -48,6 +49,7 @@ def client(mock_chatbot_service):
     """Create test client with mocked service."""
     with patch("api.main.ChatbotService", return_value=mock_chatbot_service):
         from fastapi.testclient import TestClient
+
         from api.main import app
 
         with TestClient(app) as client:
@@ -78,10 +80,7 @@ class TestChatEndpoint:
     @pytest.mark.integration
     def test_chat_endpoint_success(self, client):
         """Test chat endpoint with valid request."""
-        response = client.post(
-            "/api/v1/chat/",
-            json={"message": "Hello, how are you?"}
-        )
+        response = client.post("/api/v1/chat/", json={"message": "Hello, how are you?"})
 
         assert response.status_code == 200
         data = response.json()
@@ -91,12 +90,7 @@ class TestChatEndpoint:
     def test_chat_endpoint_with_llm(self, client):
         """Test chat endpoint with LLM enabled."""
         response = client.post(
-            "/api/v1/chat/",
-            json={
-                "message": "What is AI?",
-                "use_llm": True,
-                "n_results": 3
-            }
+            "/api/v1/chat/", json={"message": "What is AI?", "use_llm": True, "n_results": 3}
         )
 
         assert response.status_code == 200
@@ -111,8 +105,8 @@ class TestChatEndpoint:
                 "use_llm": True,
                 "n_results": 5,
                 "temperature": 0.8,
-                "max_tokens": 200
-            }
+                "max_tokens": 200,
+            },
         )
 
         assert response.status_code == 200
@@ -120,10 +114,7 @@ class TestChatEndpoint:
     @pytest.mark.integration
     def test_chat_endpoint_empty_message(self, client):
         """Test chat endpoint with empty message."""
-        response = client.post(
-            "/api/v1/chat/",
-            json={"message": ""}
-        )
+        response = client.post("/api/v1/chat/", json={"message": ""})
 
         # Should return 400 or 422 for validation error
         assert response.status_code in [400, 422]
@@ -131,23 +122,14 @@ class TestChatEndpoint:
     @pytest.mark.integration
     def test_chat_endpoint_missing_message(self, client):
         """Test chat endpoint with missing message field."""
-        response = client.post(
-            "/api/v1/chat/",
-            json={}
-        )
+        response = client.post("/api/v1/chat/", json={})
 
         assert response.status_code == 422
 
     @pytest.mark.integration
     def test_chat_endpoint_invalid_n_results(self, client):
         """Test chat endpoint with invalid n_results."""
-        response = client.post(
-            "/api/v1/chat/",
-            json={
-                "message": "Test",
-                "n_results": -1
-            }
-        )
+        response = client.post("/api/v1/chat/", json={"message": "Test", "n_results": -1})
 
         # Should validate n_results
         assert response.status_code in [200, 400, 422]
@@ -155,10 +137,7 @@ class TestChatEndpoint:
     @pytest.mark.integration
     def test_chat_endpoint_response_structure(self, client):
         """Test chat endpoint response has correct structure."""
-        response = client.post(
-            "/api/v1/chat/",
-            json={"message": "Hello"}
-        )
+        response = client.post("/api/v1/chat/", json={"message": "Hello"})
 
         assert response.status_code == 200
         data = response.json()
@@ -264,7 +243,7 @@ class TestCORS:
             headers={
                 "Origin": "http://localhost:3000",
                 "Access-Control-Request-Method": "POST",
-            }
+            },
         )
 
         # Should allow the request
@@ -292,9 +271,7 @@ class TestErrorHandling:
     def test_invalid_json(self, client):
         """Test handling of invalid JSON."""
         response = client.post(
-            "/api/v1/chat/",
-            content="invalid json",
-            headers={"Content-Type": "application/json"}
+            "/api/v1/chat/", content="invalid json", headers={"Content-Type": "application/json"}
         )
 
         assert response.status_code == 422

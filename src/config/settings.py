@@ -4,10 +4,10 @@ Centralized configuration management with environment variables
 """
 
 import os
-from pathlib import Path
-from typing import Optional
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pathlib import Path
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 500
     LLM_TIMEOUT: int = 60  # seconds (increased for larger model)
     OLLAMA_BASE_URL: str = "http://localhost:11434"  # Ollama server URL
-    GROQ_API_KEY: Optional[str] = None  # Groq API key (free at console.groq.com)
+    GROQ_API_KEY: str | None = None  # Groq API key (free at console.groq.com)
 
     # ==================== RERANKER ====================
     RERANKER_ENABLED: bool = True
@@ -92,14 +92,14 @@ class Settings(BaseSettings):
     # ==================== LOGGING ====================
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FORMAT: str = "json"  # json or text
-    LOG_FILE: Optional[str] = str(LOGS_DIR / "app.log")
+    LOG_FILE: str | None = str(LOGS_DIR / "app.log")
     LOG_ROTATION: str = "100 MB"
     LOG_RETENTION: str = "30 days"
 
     # ==================== MONITORING ====================
     ENABLE_METRICS: bool = True
     METRICS_PORT: int = 9090
-    SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN")
+    SENTRY_DSN: str | None = os.getenv("SENTRY_DSN")
 
     # ==================== DATABASE ====================
     DB_POOL_SIZE: int = 10
@@ -118,9 +118,11 @@ class Settings(BaseSettings):
 
     class Config:
         """Pydantic config"""
+
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"  # Ignore extra env vars not defined in Settings
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -130,7 +132,7 @@ class Settings(BaseSettings):
         self.VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Get cached settings instance
@@ -150,9 +152,11 @@ def is_production() -> bool:
     """Check if running in production"""
     return settings.ENVIRONMENT == "production"
 
+
 def is_development() -> bool:
     """Check if running in development"""
     return settings.ENVIRONMENT == "development"
+
 
 def get_db_path() -> Path:
     """Get vector database path"""

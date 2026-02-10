@@ -7,7 +7,7 @@ import hashlib
 import json
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from loguru import logger
 
@@ -16,12 +16,12 @@ class CacheBackend(ABC):
     """Abstract base class for cache backends."""
 
     @abstractmethod
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache."""
         pass
 
     @abstractmethod
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache."""
         pass
 
@@ -60,7 +60,7 @@ class InMemoryCache(CacheBackend):
         self._cache: dict[str, tuple[Any, float]] = {}
         self._access_times: dict[str, float] = {}
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache if not expired."""
         if key not in self._cache:
             return None
@@ -74,7 +74,7 @@ class InMemoryCache(CacheBackend):
         self._access_times[key] = time.time()
         return value
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache with optional TTL."""
         # Evict old entries if at capacity
         if len(self._cache) >= self.max_size and key not in self._cache:
@@ -168,7 +168,7 @@ class RedisCache(CacheBackend):
         """Create prefixed key."""
         return f"{self.prefix}{key}"
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from Redis."""
         if not self._client:
             return None
@@ -182,7 +182,7 @@ class RedisCache(CacheBackend):
             logger.error(f"Redis get error: {e}")
             return None
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in Redis with optional TTL."""
         if not self._client:
             return False
@@ -248,7 +248,7 @@ class CacheService:
 
     def __init__(
         self,
-        backend: Optional[CacheBackend] = None,
+        backend: CacheBackend | None = None,
         enabled: bool = True,
     ):
         """
@@ -264,7 +264,7 @@ class CacheService:
         self._hits = 0
         self._misses = 0
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache."""
         if not self.enabled:
             return None
@@ -278,7 +278,7 @@ class CacheService:
 
         return value
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache."""
         if not self.enabled:
             return False
@@ -299,7 +299,7 @@ class CacheService:
         self,
         key: str,
         factory: callable,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
     ) -> Any:
         """
         Get value from cache or compute and cache it.
@@ -345,14 +345,14 @@ def make_cache_key(*args, **kwargs) -> str:
         **kwargs: Keyword arguments.
 
     Returns:
-        MD5 hash of arguments.
+        SHA256 hash of arguments.
     """
     key_data = json.dumps({"args": args, "kwargs": kwargs}, sort_keys=True)
-    return hashlib.md5(key_data.encode()).hexdigest()
+    return hashlib.sha256(key_data.encode()).hexdigest()
 
 
 # Global cache service instance
-_cache_service: Optional[CacheService] = None
+_cache_service: CacheService | None = None
 
 
 def get_cache_service(

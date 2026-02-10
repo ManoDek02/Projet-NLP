@@ -4,15 +4,18 @@ Entry point for running the FastAPI server
 """
 
 import os
+
 import uvicorn
-from src.config.settings import settings
+
 from src.config.logging_config import log_startup
+from src.config.settings import settings
+
 
 if __name__ == "__main__":
     log_startup()
 
     port = int(os.getenv("PORT", settings.API_PORT))
-    host = "127.0.0.1" if os.getenv("PORT") else settings.API_HOST
+    host = settings.API_HOST
 
     uvicorn.run(
         "api.main:app",

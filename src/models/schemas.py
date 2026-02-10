@@ -4,13 +4,15 @@ Pydantic models for type safety and validation
 """
 
 from datetime import datetime
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, validator
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field, validator
 
 
 class MessageRole(str, Enum):
     """Message role enum"""
+
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
@@ -19,37 +21,37 @@ class MessageRole(str, Enum):
 class ChatMessage(BaseModel):
     """
     Chat message model
-    
+
     Attributes:
         role: Message role (user/assistant/system)
         content: Message content
         timestamp: Message timestamp
         metadata: Additional metadata
     """
+
     role: MessageRole
     content: str = Field(..., min_length=1, max_length=10000)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    metadata: Optional[Dict[str, Any]] = None
-    
-    @validator('content')
+    metadata: dict[str, Any] | None = None
+
+    @validator("content")
     def content_not_empty(cls, v):
         """Validate content is not just whitespace"""
         if not v.strip():
-            raise ValueError('Content cannot be empty or whitespace only')
+            raise ValueError("Content cannot be empty or whitespace only")
         return v.strip()
-    
+
     class Config:
         """Pydantic config"""
+
         use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class Conversation(BaseModel):
     """
     Conversation model (from Reddit data)
-    
+
     Attributes:
         id: Unique conversation ID
         context: Initial message or context
@@ -59,56 +61,60 @@ class Conversation(BaseModel):
         embedding: Vector embedding (optional)
         metadata: Additional metadata
     """
+
     id: int = Field(..., ge=0)
     context: str = Field(..., min_length=1)
     response: str = Field(..., min_length=1)
-    follow_up: Optional[str] = None
-    full_text: Optional[str] = None
-    embedding: Optional[List[float]] = None
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
-    
+    follow_up: str | None = None
+    full_text: str | None = None
+    embedding: list[float] | None = None
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
+
     def __init__(self, **data):
         """Initialize and auto-generate full_text"""
         super().__init__(**data)
         if not self.full_text:
             self.full_text = f"Question: {self.context}\nRéponse: {self.response}"
-    
-    @validator('context', 'response')
+
+    @validator("context", "response")
     def text_not_empty(cls, v):
         """Validate text fields are not empty"""
         if not v.strip():
-            raise ValueError('Text cannot be empty')
+            raise ValueError("Text cannot be empty")
         return v.strip()
-    
+
     class Config:
         """Pydantic config"""
+
         validate_assignment = True
 
 
 class SearchResult(BaseModel):
     """
     Search result model
-    
+
     Attributes:
         conversation: Matched conversation
         score: Similarity score (0-1)
         distance: Distance metric
         rank: Result rank
     """
+
     conversation: Conversation
     score: float = Field(..., ge=0, le=1)
-    distance: Optional[float] = None
+    distance: float | None = None
     rank: int = Field(..., ge=1)
-    
+
     class Config:
         """Pydantic config"""
+
         arbitrary_types_allowed = True
 
 
 class ChatRequest(BaseModel):
     """
     Chat request model
-    
+
     Attributes:
         message: User message
         conversation_history: Previous messages
@@ -117,49 +123,55 @@ class ChatRequest(BaseModel):
         temperature: LLM temperature (if using LLM)
         max_tokens: Maximum tokens to generate
     """
+
     message: str = Field(..., min_length=1, max_length=1000)
-    session_id: Optional[str] = Field(default=None, description="Session ID for conversation continuity")
-    conversation_history: List[ChatMessage] = Field(default_factory=list)
+    session_id: str | None = Field(
+        default=None, description="Session ID for conversation continuity"
+    )
+    conversation_history: list[ChatMessage] = Field(default_factory=list)
     use_llm: bool = False
     n_results: int = Field(default=5, ge=1, le=20)
-    temperature: Optional[float] = Field(default=0.7, ge=0, le=2)
-    max_tokens: Optional[int] = Field(default=500, ge=1, le=2000)
-    
-    @validator('message')
+    temperature: float | None = Field(default=0.7, ge=0, le=2)
+    max_tokens: int | None = Field(default=500, ge=1, le=2000)
+
+    @validator("message")
     def message_not_empty(cls, v):
         """Validate message is not empty"""
         if not v.strip():
-            raise ValueError('Message cannot be empty')
+            raise ValueError("Message cannot be empty")
         return v.strip()
-    
-    @validator('conversation_history')
+
+    @validator("conversation_history")
     def history_not_too_long(cls, v):
         """Validate conversation history length"""
         if len(v) > 50:
-            raise ValueError('Conversation history too long (max 50 messages)')
+            raise ValueError("Conversation history too long (max 50 messages)")
         return v
 
 
 class ChatResponse(BaseModel):
     """
     Chat response model
-    
+
     Attributes:
         message: Assistant's response
         sources: Source conversations used
         metadata: Response metadata (timing, model, etc.)
     """
+
     message: str
-    sources: List[SearchResult] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    
+    sources: list[SearchResult] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
     class Config:
         """Pydantic config"""
+
         arbitrary_types_allowed = True
 
 
 class HealthStatus(str, Enum):
     """Health status enum"""
+
     HEALTHY = "healthy"
     UNHEALTHY = "unhealthy"
     DEGRADED = "degraded"
@@ -168,52 +180,52 @@ class HealthStatus(str, Enum):
 class HealthCheck(BaseModel):
     """
     Health check response
-    
+
     Attributes:
         status: Overall health status
         version: Application version
         components: Component health statuses
         timestamp: Check timestamp
     """
+
     status: HealthStatus
     version: str
-    components: Dict[str, Dict[str, Any]]
+    components: dict[str, dict[str, Any]]
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         """Pydantic config"""
+
         use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class ErrorResponse(BaseModel):
     """
     Error response model
-    
+
     Attributes:
         error: Error message
         detail: Detailed error information
         code: Error code
         timestamp: Error timestamp
     """
+
     error: str
-    detail: Optional[str] = None
-    code: Optional[str] = None
+    detail: str | None = None
+    code: str | None = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         """Pydantic config"""
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class IndexingStatus(BaseModel):
     """
     Indexing status model
-    
+
     Attributes:
         total_documents: Total documents to index
         indexed_documents: Documents already indexed
@@ -221,16 +233,16 @@ class IndexingStatus(BaseModel):
         status: Current status
         errors: List of errors encountered
     """
+
     total_documents: int
     indexed_documents: int
     progress: float = Field(..., ge=0, le=100)
     status: str
-    errors: List[str] = Field(default_factory=list)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    
+    errors: list[str] = Field(default_factory=list)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
     class Config:
         """Pydantic config"""
-        json_encoders = {
-            datetime: lambda v: v.isoformat() if v else None
-        }
+
+        json_encoders = {datetime: lambda v: v.isoformat() if v else None}

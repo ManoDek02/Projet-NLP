@@ -2,8 +2,9 @@
 Unit tests for LLMService.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestLLMService:
@@ -13,9 +14,7 @@ class TestLLMService:
     def mock_ollama(self):
         """Create mock Ollama client."""
         mock = MagicMock()
-        mock.chat.return_value = {
-            "message": {"content": "This is a test response from LLM."}
-        }
+        mock.chat.return_value = {"message": {"content": "This is a test response from LLM."}}
         mock.list.return_value = {"models": [{"name": "llama3.2"}]}
         return mock
 
@@ -24,6 +23,7 @@ class TestLLMService:
         """Create LLMService with mocked Ollama."""
         with patch("src.core.llm_handler.ollama", mock_ollama):
             from src.core.llm_handler import LLMService
+
             return LLMService()
 
     @pytest.mark.unit
@@ -186,10 +186,7 @@ class TestLLMServiceProviders:
 
             from src.core.llm_handler import LLMService
 
-            with patch.dict("os.environ", {
-                "LLM_PROVIDER": "openai",
-                "OPENAI_API_KEY": "test-key"
-            }):
+            with patch.dict("os.environ", {"LLM_PROVIDER": "openai", "OPENAI_API_KEY": "test-key"}):
                 # Should initialize without error
                 try:
                     service = LLMService()
@@ -205,10 +202,9 @@ class TestLLMServiceProviders:
 
             from src.core.llm_handler import LLMService
 
-            with patch.dict("os.environ", {
-                "LLM_PROVIDER": "anthropic",
-                "ANTHROPIC_API_KEY": "test-key"
-            }):
+            with patch.dict(
+                "os.environ", {"LLM_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "test-key"}
+            ):
                 try:
                     service = LLMService()
                 except Exception:
