@@ -40,11 +40,11 @@ Thank you for your interest in contributing to the Reddit RAG Chatbot project!
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/reddit-rag-chatbot.git
+git clone https://github.com/ManoDek02/Projet-NLP
 cd reddit-rag-chatbot
 
 # Add upstream remote
-git remote add upstream https://github.com/original-org/reddit-rag-chatbot.git
+git remote add upstream https://github.com/ManoDek02/Projet-NLP
 
 # Create virtual environment
 python -m venv venv
