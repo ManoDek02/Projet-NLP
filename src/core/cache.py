@@ -7,6 +7,7 @@ import hashlib
 import json
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import Any
 
 from loguru import logger
@@ -298,7 +299,7 @@ class CacheService:
     def get_or_set(
         self,
         key: str,
-        factory: callable,
+        factory: Callable,
         ttl: int | None = None,
     ) -> Any:
         """
