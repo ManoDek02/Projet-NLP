@@ -6,13 +6,15 @@ Prepare and clean conversation data for indexing
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from src.config.logging_config import get_logger, log_startup
+from src.config.settings import settings
 from src.utils.data_loader import DataLoader
 from src.utils.text_processor import TextProcessor
-from src.config.settings import settings
-from src.config.logging_config import get_logger, log_startup
+
 
 logger = get_logger(__name__)
 
@@ -58,7 +60,7 @@ def main():
                 logger.debug(f"Skipped invalid conversation {conv.id}")
 
         except Exception as e:
-            logger.warning(f"Error cleaning conversation {conv.id}: {str(e)}")
+            logger.warning(f"Error cleaning conversation {conv.id}: {e!s}")
             continue
 
     logger.info(f"✓ Cleaned {len(cleaned_conversations)}/{len(conversations)} conversations")
@@ -84,5 +86,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logger.error(f"Data preparation failed: {str(e)}")
+        logger.error(f"Data preparation failed: {e!s}")
         sys.exit(1)

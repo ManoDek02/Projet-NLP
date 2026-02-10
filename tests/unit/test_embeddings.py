@@ -2,9 +2,10 @@
 Unit tests for EmbeddingService.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 
 
 class TestEmbeddingService:
@@ -21,8 +22,11 @@ class TestEmbeddingService:
     @pytest.fixture
     def service(self, mock_sentence_transformer):
         """Create EmbeddingService with mocked model."""
-        with patch("src.core.embeddings.SentenceTransformer", return_value=mock_sentence_transformer):
+        with patch(
+            "src.core.embeddings.SentenceTransformer", return_value=mock_sentence_transformer
+        ):
             from src.core.embeddings import EmbeddingService
+
             return EmbeddingService()
 
     @pytest.mark.unit
@@ -111,6 +115,7 @@ class TestEmbeddingService:
     def test_get_similarity_range(self, service):
         """Test similarity is always between -1 and 1."""
         import random
+
         for _ in range(10):
             vec1 = [random.random() for _ in range(384)]
             vec2 = [random.random() for _ in range(384)]

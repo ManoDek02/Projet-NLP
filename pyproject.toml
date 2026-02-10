@@ -38,26 +38,22 @@ classifiers = [
 ]
 
 dependencies = [
-    "fastapi>=0.109.0",
+    "fastapi>=0.115.2",
     "uvicorn[standard]>=0.27.0",
     "pydantic>=2.5.3",
     "pydantic-settings>=2.1.0",
     "sentence-transformers>=2.3.1",
     "chromadb>=0.4.22",
     "torch>=2.2.0",
-    "numpy>=1.26.3",
-    "pandas>=2.1.4",
-    "gradio>=4.0.0",
-    "streamlit>=1.30.0",
+    "numpy<2.0.0",
     "ollama>=0.1.6",
-    "openai>=1.7.2",
-    "anthropic>=0.8.1",
     "httpx>=0.25.2",
     "requests>=2.31.0",
     "python-dotenv>=1.0.0",
     "loguru>=0.7.2",
     "tenacity>=8.2.3",
     "cachetools>=5.3.2",
+    "groq",
 ]
 
 [project.optional-dependencies]
@@ -138,11 +134,20 @@ ignore = [
     "B905",   # zip without strict parameter
     "PLR0913", # too many arguments
     "PLR2004", # magic value comparison
+    "PLW0603", # global statement (intentional singleton pattern)
+    "PLR0915", # too many statements
+    "ERA001",  # commented-out code (useful for optional configs)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["ARG", "PLR2004"]
+"tests/*" = ["ARG", "PLR2004", "PLC0415", "SIM105", "F841", "E722", "PTH123"]
 "scripts/*" = ["PLR2004"]
+"api/*" = ["ARG001", "ARG002", "B904", "E402"]
+"api/schemas/*" = ["RUF012"]
+"src/models/*" = ["RUF012"]
+"src/core/llm_handler.py" = ["PLC0415", "ARG002"]
+"src/core/cache.py" = ["PLC0415"]
+"src/core/reranker.py" = ["PLC0415"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src", "api", "ui"]

@@ -4,10 +4,8 @@
  * Supports session persistence, source display, and cache indicators
  */
 
-// API Configuration
-const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:8000/api/v1'
-    : '/api/v1';
+// API Configuration - always use relative URL (works with both dev and Docker/Nginx)
+const API_BASE_URL = '/api/v1';
 
 // State
 let conversationHistory = [];

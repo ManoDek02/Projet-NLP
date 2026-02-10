@@ -3,16 +3,19 @@
 # ============================================================
 
 # ==================== CORE FRAMEWORK ====================
-fastapi==0.109.0              # Modern web framework
-uvicorn[standard]==0.27.0     # ASGI server
-pydantic==2.5.3               # Data validation
-#pydantic-settings==2.1.0      # Settings management
+fastapi>=0.115.2              # Modern web framework
+uvicorn[standard]>=0.27.0     # ASGI server
+pydantic>=2.5.3               # Data validation
+pydantic-settings>=2.1.0      # Settings management
 
 # ==================== RAG & ML ====================
 sentence-transformers==2.3.1  # Embeddings
 chromadb==0.4.22             # Vector database
-#numpy==1.26.2
-torch                # PyTorch (for embeddings)
+numpy<2.0.0                  # chromadb 0.4.22 incompatible with numpy 2.x
+# PyTorch CPU-only (much smaller than CUDA version)
+# For GPU support, install manually: pip install torch --index-url https://download.pytorch.org/whl/cu121
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
 
 # ==================== LLM (Optional) ====================
 ollama==0.1.6                # Local LLM integration
@@ -22,8 +25,8 @@ groq
 
 
 # ==================== WEB UI ====================
-gradio==6.0.0                # Web interface
-streamlit==1.30.0            # Alternative UI
+# Frontend is served as static files by FastAPI (frontend/ directory)
+# gradio and streamlit are not needed
 
 # ==================== DATA PROCESSING ====================
 #pandas==2.1.4                # Data manipulation
@@ -48,7 +51,7 @@ passlib[bcrypt]==1.7.4       # Password hashing
 # python-multipart for OAuth2 (already included above)
 
 # ==================== HTTP & NETWORKING ====================
-httpx>=0.25.2,<0.26.0        # Async HTTP client (compatible with ollama)
+httpx>=0.25.2                # Async HTTP client
 requests==2.31.0             # Sync HTTP client
 websockets==12.0             # WebSocket support
 

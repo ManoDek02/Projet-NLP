@@ -3,19 +3,20 @@ FastAPI Application - Professional Reddit RAG Chatbot
 Production-ready REST API with OpenAPI documentation
 """
 
+import time
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
-import time
-from typing import Dict, Any
-from pathlib import Path
 
+from src.config.logging_config import get_logger, log_request, log_shutdown, log_startup
 from src.config.settings import settings
-from src.config.logging_config import get_logger, log_startup, log_shutdown, log_request
 from src.models.schemas import ErrorResponse
+
 
 logger = get_logger(__name__)
 
@@ -92,7 +93,7 @@ async def log_requests(request: Request, call_next):
         method=request.method,
         path=request.url.path,
         status_code=response.status_code,
-        duration=duration
+        duration=duration,
     )
 
     # Add custom headers
@@ -108,17 +109,18 @@ async def error_handler(request: Request, call_next):
     try:
         return await call_next(request)
     except Exception as e:
-        logger.error(f"Unhandled error: {str(e)}")
+        logger.error(f"Unhandled error: {e!s}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=ErrorResponse(
                 error="Internal Server Error",
                 detail=str(e) if settings.DEBUG else "An unexpected error occurred",
-            ).dict()
+            ).dict(),
         )
 
 
 # ==================== EXCEPTION HANDLERS ====================
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -128,7 +130,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content=ErrorResponse(
             error=exc.detail,
             code=f"HTTP_{exc.status_code}",
-        ).dict()
+        ).dict(),
     )
 
 
@@ -141,7 +143,7 @@ async def value_error_handler(request: Request, exc: ValueError):
             error="Validation Error",
             detail=str(exc),
             code="VALIDATION_ERROR",
-        ).dict()
+        ).dict(),
     )
 
 
@@ -149,6 +151,7 @@ async def value_error_handler(request: Request, exc: ValueError):
 
 # Import routes
 from api.routes import chat, health
+
 
 # Register routes
 app.include_router(
@@ -184,17 +187,18 @@ if FRONTEND_DIR.exists():
 
 # ==================== STARTUP MESSAGE ====================
 
+
 @app.on_event("startup")
 async def startup_message():
     """Print startup message"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(f"{settings.APP_NAME} v{settings.APP_VERSION}")
-    print("="*70)
+    print("=" * 70)
     print(f"API Documentation: http://{settings.API_HOST}:{settings.API_PORT}/docs")
     print(f"ReDoc: http://{settings.API_HOST}:{settings.API_PORT}/redoc")
     print(f"Environment: {settings.ENVIRONMENT}")
     print(f"Debug: {settings.DEBUG}")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 if __name__ == "__main__":

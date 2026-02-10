@@ -6,14 +6,16 @@ Create vector embeddings and index conversations in ChromaDB
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.utils.data_loader import load_conversations
+from src.config.logging_config import get_logger, log_startup
+from src.config.settings import settings
 from src.core.embeddings import get_embedding_service
 from src.core.vector_store import get_vector_store_service
-from src.config.settings import settings
-from src.config.logging_config import get_logger, log_startup
+from src.utils.data_loader import load_conversations
+
 
 logger = get_logger(__name__)
 
@@ -45,7 +47,7 @@ def main():
     if existing_count > 0:
         logger.warning(f" Vector store already contains {existing_count} documents")
         response = input("Reset and re-index? (yes/no): ")
-        if response.lower() == 'yes':
+        if response.lower() == "yes":
             vector_store.reset()
             logger.info("✓ Vector store reset")
         else:
@@ -55,13 +57,10 @@ def main():
     # Create embeddings
     logger.info("\n Creating embeddings...")
     logger.info(f"  Batch size: {settings.EMBEDDING_BATCH_SIZE}")
-    logger.info(f"  This may take 10-15 minutes for 56k conversations...")
+    logger.info("  This may take 10-15 minutes for 56k conversations...")
 
     texts = [conv.full_text for conv in conversations]
-    embeddings = embedding_service.embed_batch(
-        texts,
-        show_progress=True
-    )
+    embeddings = embedding_service.embed_batch(texts, show_progress=True)
 
     logger.info(f"✓ Created {len(embeddings)} embeddings")
 
@@ -72,8 +71,8 @@ def main():
     total_indexed = 0
 
     for i in range(0, len(conversations), batch_size):
-        batch_convs = conversations[i:i+batch_size]
-        batch_embeds = embeddings[i:i+batch_size]
+        batch_convs = conversations[i : i + batch_size]
+        batch_embeds = embeddings[i : i + batch_size]
 
         success = vector_store.add_conversations(batch_convs, batch_embeds)
 
@@ -81,7 +80,7 @@ def main():
             total_indexed += len(batch_convs)
             logger.info(f"  Indexed {total_indexed}/{len(conversations)} conversations")
         else:
-            logger.error(f"Failed to index batch {i//batch_size + 1}")
+            logger.error(f"Failed to index batch {i // batch_size + 1}")
 
     # Verify
     logger.info("\n Verification...")
@@ -118,7 +117,8 @@ if __name__ == "__main__":
         logger.info("\n\n Indexing interrupted by user")
         sys.exit(1)
     except Exception as e:
-        logger.error(f"Indexing failed: {str(e)}")
+        logger.error(f"Indexing failed: {e!s}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

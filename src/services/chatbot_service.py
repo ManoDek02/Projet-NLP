@@ -3,31 +3,24 @@ Chatbot Service - Professional Reddit RAG Chatbot
 Main business logic with reranking, caching, conversation memory, and monitoring
 """
 
-from typing import List, Optional
-from datetime import datetime
 import time
+from datetime import datetime
 
-from src.models.schemas import (
-    ChatRequest,
-    ChatResponse,
-    SearchResult,
-    Conversation,
-    MessageRole
-)
-from src.core.embeddings import EmbeddingService
-from src.core.vector_store import VectorStoreService
-from src.core.llm_handler import LLMService
-from src.core.reranker import RerankerService, get_reranker
+from src.config.logging_config import get_logger, log_metric
+from src.config.settings import settings
 from src.core.cache import CacheService, get_cache_service, make_cache_key
 from src.core.conversation_memory import (
     ConversationMemory,
     SummarizingMemory,
     get_conversation_memory,
 )
-from src.config.settings import settings
-from src.config.logging_config import get_logger, log_metric
-from src.utils.validators import validate_input
+from src.core.embeddings import EmbeddingService
+from src.core.llm_handler import LLMService
+from src.core.reranker import RerankerService, get_reranker
+from src.core.vector_store import VectorStoreService
+from src.models.schemas import ChatRequest, ChatResponse, SearchResult
 from src.utils.text_processor import TextProcessor
+from src.utils.validators import validate_input
 
 
 logger = get_logger(__name__)
@@ -49,12 +42,12 @@ class ChatbotService:
 
     def __init__(
         self,
-        embedding_service: Optional[EmbeddingService] = None,
-        vector_store: Optional[VectorStoreService] = None,
-        llm_service: Optional[LLMService] = None,
-        reranker: Optional[RerankerService] = None,
-        cache_service: Optional[CacheService] = None,
-        conversation_memory: Optional[ConversationMemory] = None,
+        embedding_service: EmbeddingService | None = None,
+        vector_store: VectorStoreService | None = None,
+        llm_service: LLMService | None = None,
+        reranker: RerankerService | None = None,
+        cache_service: CacheService | None = None,
+        conversation_memory: ConversationMemory | None = None,
     ):
         self.embedding_service = embedding_service or EmbeddingService()
         self.vector_store = vector_store or VectorStoreService()
@@ -105,7 +98,7 @@ class ChatbotService:
             f"memory=enabled)"
         )
 
-    def chat(self, request: ChatRequest, session_id: Optional[str] = None) -> ChatResponse:
+    def chat(self, request: ChatRequest, session_id: str | None = None) -> ChatResponse:
         """
         Main chat function with reranking, caching, and conversation memory.
 
@@ -151,8 +144,7 @@ class ChatbotService:
 
             # 4. Search similar conversations
             search_results = self._search_similar(
-                query=request.message,
-                n_results=request.n_results
+                query=request.message, n_results=request.n_results
             )
 
             # 5. Rerank results with cross-encoder
@@ -210,32 +202,28 @@ class ChatbotService:
                     "cache_hit": False,
                     "session_id": session_id,
                     "timestamp": datetime.utcnow().isoformat(),
-                }
+                },
             )
 
             # 10. Cache the response
             self.cache.set(cache_key, response.dict(), ttl=settings.CACHE_TTL)
 
             # 11. Log metrics
-            log_metric("chat_duration_ms", duration, {
-                "method": "llm" if request.use_llm else "simple"
-            })
+            log_metric(
+                "chat_duration_ms", duration, {"method": "llm" if request.use_llm else "simple"}
+            )
             log_metric("sources_retrieved", len(search_results))
 
             logger.info(f"Chat completed in {duration:.2f}ms")
             return response
 
         except Exception as e:
-            logger.error(f"Chat failed: {str(e)}")
+            logger.error(f"Chat failed: {e!s}")
             duration = (time.time() - start_time) * 1000
             log_metric("chat_error", 1, {"error_type": type(e).__name__})
             raise
 
-    def _search_similar(
-        self,
-        query: str,
-        n_results: int = 5
-    ) -> List[SearchResult]:
+    def _search_similar(self, query: str, n_results: int = 5) -> list[SearchResult]:
         """Search for similar conversations."""
         try:
             processed_query = self.text_processor.clean_text(query)
@@ -249,17 +237,17 @@ class ChatbotService:
             results = self.vector_store.search(
                 query_embedding=query_embedding,
                 n_results=fetch_n,
-                min_score=settings.MIN_SIMILARITY_SCORE
+                min_score=settings.MIN_SIMILARITY_SCORE,
             )
 
             logger.debug(f"Found {len(results)} similar conversations")
             return results
 
         except Exception as e:
-            logger.error(f"Search failed: {str(e)}")
+            logger.error(f"Search failed: {e!s}")
             raise
 
-    def _generate_simple(self, search_results: List[SearchResult]) -> str:
+    def _generate_simple(self, search_results: list[SearchResult]) -> str:
         """Generate simple response (best match)."""
         if not search_results:
             return "I couldn't find any relevant conversation. Could you rephrase your question?"
@@ -271,8 +259,8 @@ class ChatbotService:
     def _generate_with_llm(
         self,
         query: str,
-        context: List[SearchResult],
-        history: List = None,
+        context: list[SearchResult],
+        history: list | None = None,
         memory_context: str = "",
         temperature: float = 0.7,
         max_tokens: int = 500,
@@ -300,10 +288,10 @@ class ChatbotService:
             return response
 
         except Exception as e:
-            logger.warning(f"LLM generation failed: {str(e)}, falling back to simple")
+            logger.warning(f"LLM generation failed: {e!s}, falling back to simple")
             return self._generate_simple(context)
 
-    def _build_context(self, search_results: List[SearchResult]) -> str:
+    def _build_context(self, search_results: list[SearchResult]) -> str:
         """Build context string from search results."""
         context_parts = []
 
@@ -321,7 +309,7 @@ class ChatbotService:
 
         return "\n\n".join(context_parts)
 
-    def _summarize_with_llm(self, text: str) -> Optional[str]:
+    def _summarize_with_llm(self, text: str) -> str | None:
         """
         Summarize conversation history using the LLM.
         Used by SummarizingMemory when the history exceeds the threshold.
@@ -361,7 +349,7 @@ class ChatbotService:
             return stats
 
         except Exception as e:
-            logger.error(f"Failed to get stats: {str(e)}")
+            logger.error(f"Failed to get stats: {e!s}")
             return {}
 
     def health_check(self) -> dict:
@@ -370,25 +358,28 @@ class ChatbotService:
             "embedding_service": "healthy",
             "vector_store": "healthy",
             "llm_service": "healthy" if self.llm_service.is_available() else "unavailable",
-            "reranker": "healthy" if self.reranker and self.reranker.is_available() else "unavailable",
+            "reranker": "healthy"
+            if self.reranker and self.reranker.is_available()
+            else "unavailable",
             "cache": "healthy" if self.cache.enabled else "disabled",
         }
 
         try:
             self.embedding_service.embed_text("test")
-        except:
+        except Exception:
             health["embedding_service"] = "unhealthy"
 
         try:
             self.vector_store.count()
-        except:
+        except Exception:
             health["vector_store"] = "unhealthy"
 
         return health
 
 
 # Singleton instance with lazy initialization
-_chatbot_service: Optional[ChatbotService] = None
+_chatbot_service: ChatbotService | None = None
+
 
 def get_chatbot_service() -> ChatbotService:
     """Get chatbot service singleton."""

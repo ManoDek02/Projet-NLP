@@ -2,8 +2,9 @@
 Unit tests for VectorStoreService.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 class TestVectorStoreService:
@@ -17,11 +18,13 @@ class TestVectorStoreService:
         mock_collection.query.return_value = {
             "ids": [["conv_1", "conv_2", "conv_3"]],
             "documents": [["doc1", "doc2", "doc3"]],
-            "metadatas": [[
-                {"context": "Question 1", "response": "Answer 1", "id": "1"},
-                {"context": "Question 2", "response": "Answer 2", "id": "2"},
-                {"context": "Question 3", "response": "Answer 3", "id": "3"},
-            ]],
+            "metadatas": [
+                [
+                    {"context": "Question 1", "response": "Answer 1", "id": "1"},
+                    {"context": "Question 2", "response": "Answer 2", "id": "2"},
+                    {"context": "Question 3", "response": "Answer 3", "id": "3"},
+                ]
+            ],
             "distances": [[0.1, 0.2, 0.3]],
         }
         mock_collection.add.return_value = None
@@ -43,6 +46,7 @@ class TestVectorStoreService:
             mock_chromadb.PersistentClient.return_value = mock_chroma_client
 
             from src.core.vector_store import VectorStoreService
+
             return VectorStoreService()
 
     @pytest.mark.unit
@@ -84,10 +88,12 @@ class TestVectorStoreService:
         mock_chroma_collection.query.return_value = {
             "ids": [["conv_1", "conv_2"]],
             "documents": [["doc1", "doc2"]],
-            "metadatas": [[
-                {"context": "Q1", "response": "A1", "id": "1"},
-                {"context": "Q2", "response": "A2", "id": "2"},
-            ]],
+            "metadatas": [
+                [
+                    {"context": "Q1", "response": "A1", "id": "1"},
+                    {"context": "Q2", "response": "A2", "id": "2"},
+                ]
+            ],
             "distances": [[0.8, 0.9]],  # High distance = low similarity
         }
 
@@ -211,6 +217,7 @@ class TestVectorStoreServiceIntegration:
     def test_real_chromadb_operations(self, temp_persist_dir):
         """Test real ChromaDB operations."""
         import os
+
         os.environ["CHROMA_PERSIST_DIRECTORY"] = temp_persist_dir
 
         from src.core.vector_store import VectorStoreService

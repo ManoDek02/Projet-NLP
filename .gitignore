@@ -110,6 +110,10 @@ $RECYCLE.BIN/
 *~
 
 # ==================== PROJECT SPECIFIC ====================
+# Vector database (too large for GitHub)
+data/vector_db/
+*.sqlite3
+
 # Logs
 logs/
 *.log

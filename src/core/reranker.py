@@ -3,8 +3,6 @@ Reranking Module for improved search relevance.
 Uses cross-encoder models to rerank search results.
 """
 
-from typing import Optional
-
 from loguru import logger
 
 from src.models.schemas import SearchResult
@@ -63,7 +61,7 @@ class RerankerService:
         self,
         query: str,
         results: list[SearchResult],
-        top_k: Optional[int] = None,
+        top_k: int | None = None,
     ) -> list[SearchResult]:
         """
         Rerank search results based on query relevance.
@@ -85,10 +83,7 @@ class RerankerService:
 
         try:
             # Prepare query-document pairs
-            pairs = [
-                [query, result.conversation.context]
-                for result in results
-            ]
+            pairs = [[query, result.conversation.context] for result in results]
 
             # Get cross-encoder scores
             scores = self.model.predict(pairs, batch_size=self.batch_size)
@@ -165,7 +160,7 @@ class HybridSearchReranker:
 
     def __init__(
         self,
-        reranker: Optional[RerankerService] = None,
+        reranker: RerankerService | None = None,
         dense_weight: float = 0.5,
         sparse_weight: float = 0.5,
     ):
@@ -277,7 +272,7 @@ class HybridSearchReranker:
 
 
 # Singleton instance
-_reranker: Optional[RerankerService] = None
+_reranker: RerankerService | None = None
 
 
 def get_reranker(

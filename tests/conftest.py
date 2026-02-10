@@ -6,10 +6,10 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -160,9 +160,7 @@ def vector_store_service(mock_chroma_client):
 def llm_service():
     """Create LLMService with mocked provider."""
     with patch("src.core.llm_handler.ollama") as mock_ollama:
-        mock_ollama.chat.return_value = {
-            "message": {"content": "This is a mock LLM response."}
-        }
+        mock_ollama.chat.return_value = {"message": {"content": "This is a mock LLM response."}}
 
         from src.core.llm_handler import LLMService
 
@@ -173,10 +171,11 @@ def llm_service():
 @pytest.fixture
 def chatbot_service(embedding_service, vector_store_service, llm_service):
     """Create ChatbotService with mocked dependencies."""
-    with patch("src.services.chatbot_service.EmbeddingService", return_value=embedding_service), \
-         patch("src.services.chatbot_service.VectorStoreService", return_value=vector_store_service), \
-         patch("src.services.chatbot_service.LLMService", return_value=llm_service):
-
+    with (
+        patch("src.services.chatbot_service.EmbeddingService", return_value=embedding_service),
+        patch("src.services.chatbot_service.VectorStoreService", return_value=vector_store_service),
+        patch("src.services.chatbot_service.LLMService", return_value=llm_service),
+    ):
         from src.services.chatbot_service import ChatbotService
 
         service = ChatbotService()

@@ -4,10 +4,10 @@ Structured logging with rotation, filtering, and monitoring integration
 """
 
 import sys
-import logging
 from pathlib import Path
-from typing import Optional
+
 from loguru import logger
+
 from src.config.settings import settings
 
 
@@ -94,12 +94,7 @@ class LogConfig:
     @staticmethod
     def _get_file_format() -> str:
         """Get file log format"""
-        return (
-            "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
-            "{level: <8} | "
-            "{name}:{function}:{line} | "
-            "{message}"
-        )
+        return "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} | {message}"
 
     @staticmethod
     def _get_json_format() -> str:
@@ -107,7 +102,7 @@ class LogConfig:
         return "{message}"
 
     @staticmethod
-    def get_logger(name: Optional[str] = None):
+    def get_logger(name: str | None = None):
         """
         Get logger instance
 
@@ -125,8 +120,9 @@ class LogConfig:
 # Initialize logging
 log_config = LogConfig()
 
+
 # Export configured logger
-def get_logger(name: Optional[str] = None):
+def get_logger(name: str | None = None):
     """Get logger for module"""
     return log_config.get_logger(name)
 
@@ -134,20 +130,22 @@ def get_logger(name: Optional[str] = None):
 # Convenience functions
 def log_startup():
     """Log application startup"""
-    logger.info("="*60)
+    logger.info("=" * 60)
     logger.info(f" Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Debug: {settings.DEBUG}")
     logger.info(f"Log Level: {settings.LOG_LEVEL}")
-    logger.info("="*60)
+    logger.info("=" * 60)
+
 
 def log_shutdown():
     """Log application shutdown"""
-    logger.info("="*60)
+    logger.info("=" * 60)
     logger.info(f" Shutting down {settings.APP_NAME}")
-    logger.info("="*60)
+    logger.info("=" * 60)
 
-def log_error(error: Exception, context: Optional[dict] = None):
+
+def log_error(error: Exception, context: dict | None = None):
     """
     Log error with context
 
@@ -155,12 +153,13 @@ def log_error(error: Exception, context: Optional[dict] = None):
         error: Exception to log
         context: Additional context dictionary
     """
-    logger.error(f"Error occurred: {str(error)}")
+    logger.error(f"Error occurred: {error!s}")
     if context:
         logger.error(f"Context: {context}")
     logger.exception(error)
 
-def log_metric(metric_name: str, value: float, tags: Optional[dict] = None):
+
+def log_metric(metric_name: str, value: float, tags: dict | None = None):
     """
     Log metric (for monitoring)
 
@@ -169,12 +168,9 @@ def log_metric(metric_name: str, value: float, tags: Optional[dict] = None):
         value: Metric value
         tags: Additional tags
     """
-    log_data = {
-        "metric": metric_name,
-        "value": value,
-        "tags": tags or {}
-    }
+    log_data = {"metric": metric_name, "value": value, "tags": tags or {}}
     logger.info(f"METRIC: {log_data}")
+
 
 def log_request(method: str, path: str, status_code: int, duration: float):
     """
@@ -193,5 +189,5 @@ def log_request(method: str, path: str, status_code: int, duration: float):
             "http_path": path,
             "http_status": status_code,
             "duration_ms": duration,
-        }
+        },
     )
