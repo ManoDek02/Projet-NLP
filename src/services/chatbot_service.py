@@ -309,8 +309,12 @@ class ChatbotService:
 
         for i, result in enumerate(search_results[:3], 1):
             conv = result.conversation
+            if 0.0 <= result.score <= 1.0:
+                score_label = f"{result.score:.0%}"
+            else:
+                score_label = f"{result.score:.3f}"
             context_parts.append(
-                f"Example {i} (relevance: {result.score:.0%}):\n"
+                f"Example {i} (relevance: {score_label}):\n"
                 f"Q: {conv.context}\n"
                 f"A: {conv.response}"
             )

@@ -93,8 +93,18 @@ class RerankerService:
             # Get cross-encoder scores
             scores = self.model.predict(pairs, batch_size=self.batch_size)
 
+            # Normalize scores to 0-1 for display/consistency
+            scores = [float(s) for s in scores]
+            min_score = min(scores)
+            max_score = max(scores)
+            if max_score > min_score:
+                norm_scores = [(s - min_score) / (max_score - min_score) for s in scores]
+            else:
+                # All scores identical -> treat as neutral relevance
+                norm_scores = [0.5 for _ in scores]
+
             # Combine results with new scores
-            scored_results = list(zip(results, scores))
+            scored_results = list(zip(results, norm_scores))
 
             # Sort by cross-encoder score (higher is better)
             scored_results.sort(key=lambda x: x[1], reverse=True)

@@ -1,153 +1,168 @@
 # Reddit RAG Chatbot
 
-A production-ready Retrieval-Augmented Generation (RAG) chatbot built on Reddit conversation data with multilingual support.
+Chatbot RAG (Retrieval-Augmented Generation) basé sur des conversations Reddit, avec API FastAPI et frontend HTML/JS.
 
-## Features
+## Fonctionnalités
 
-- **RAG Pipeline**: Semantic search with vector embeddings + LLM generation
-- **Multilingual Support**: 60+ languages via `paraphrase-multilingual-MiniLM-L12-v2`
-- **Multiple LLM Providers**: Ollama (local), OpenAI, Anthropic
-- **Production Ready**: Docker, health checks, logging, monitoring
-- **Multiple Interfaces**: REST API, Gradio UI, Streamlit UI
-- **56,000+ Reddit Conversations**: Pre-indexed dataset
+- **Pipeline RAG** : embeddings vectoriels + recherche sémantique + génération LLM
+- **Support multilingue** : `paraphrase-multilingual-MiniLM-L12-v2`
+- **Fournisseurs LLM** : Ollama (local), OpenAI, Anthropic, Groq
+- **Reranking & cache** : amélioration de la pertinence et réduction de la latence
+- **Rate limiting** : protection intégrée
+- **API REST + frontend statique** : UI simple en HTML/CSS/JS
+- **Déploiement Docker** : configuration prête à l'emploi
 
-## Quick Start
+## Démarrage rapide
 
-### Prerequisites
+### Prérequis
 
 - Python 3.10+
-- [Ollama](https://ollama.ai/) (optional, for local LLM)
+- [Ollama](https://ollama.ai/) (optionnel, pour un LLM local)
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/reddit-rag-chatbot.git
-cd reddit-rag-chatbot
+# Cloner le dépôt
+git clone https://github.com/ManoDek02/Projet-NLP.git
+cd Projet-NLP
 
-# Create virtual environment
+# Créer l'environnement virtuel
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-# or
+# ou
 .\venv\Scripts\activate  # Windows
 
-# Install dependencies
+# Installer les dépendances
 pip install -r requirements.txt
 
-# Copy environment template
+# Copier le template d'environnement
 cp .env.example .env
 ```
 
-### Data Preparation
+### Préparer les données
 
 ```bash
-# Prepare raw data
 python scripts/prepare_data.py
-
-# Index conversations into vector store
 python scripts/index_conversations.py
 ```
 
-### Run the Application
+### Lancer l'application
 
 ```bash
-# Start API server
+# Démarrer l'API
 python run_api.py
 
-# In another terminal, start UI
-python run_ui.py
+# Démarrer le frontend (dans un autre terminal)
+python run_frontend.py
 ```
 
-Access:
-- **API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Gradio UI**: http://localhost:7861
+Accès :
+- **API** : http://localhost:8000
+- **Docs API** : http://localhost:8000/docs
+- **Frontend** : http://localhost:3000
 
-## Project Structure
+## Structure du projet
 
 ```
-reddit-rag-chatbot/
-├── api/                    # FastAPI REST API
-│   ├── main.py            # Application setup
-│   ├── routes/            # API endpoints
-│   └── schemas/           # Request/Response models
+Projet-NLP/
+├── api/                      # API FastAPI
+│   ├── main.py               # App FastAPI
+│   ├── routes/               # Endpoints
+│   └── schemas/              # Schémas requête/réponse
 ├── src/
-│   ├── config/            # Configuration management
-│   ├── core/              # RAG components
-│   │   ├── embeddings.py  # Sentence-transformers
-│   │   ├── vector_store.py # ChromaDB
-│   │   └── llm_handler.py # LLM integration
-│   ├── services/          # Business logic
-│   ├── models/            # Pydantic schemas
-│   └── utils/             # Utilities
-├── ui/                    # User interfaces
-│   ├── gradio_app.py     # Gradio interface
-│   └── streamlit_app.py  # Streamlit interface
-├── scripts/               # Data processing scripts
-├── tests/                 # Test suite
-├── docker/                # Docker configuration
-└── data/                  # Data directory
+│   ├── config/               # Configuration et logs
+│   ├── core/                 # Composants RAG (embeddings, vector store, LLM)
+│   ├── services/             # Logique métier
+│   ├── models/               # Modèles Pydantic
+│   └── utils/                # Utilitaires
+├── frontend/                 # UI HTML/CSS/JS
+├── scripts/                  # Préparation des données, indexation, benchmark
+├── docs/                     # Documentation (API, architecture, déploiement)
+├── docker/                   # Dockerfile + docker-compose
+├── data/                     # Données brutes, préparées et index vectoriel
+├── logs/                     # Logs d'exécution
+└── tests/                    # Tests unitaires et d'intégration
 ```
 
 ## Configuration
 
-All configuration is managed via environment variables. See `.env.example` for all options.
+La configuration passe par des variables d'environnement. Voir `.env.example`.
 
-### Key Settings
+### Réglages clés
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `LLM_PROVIDER` | LLM backend (ollama/openai/anthropic) | `ollama` |
-| `LLM_MODEL` | Model name | `llama3.2` |
-| `EMBEDDING_MODEL` | Embedding model | `paraphrase-multilingual-MiniLM-L12-v2` |
-| `API_PORT` | API server port | `8000` |
-| `UI_PORT` | UI server port | `7861` |
+| Variable | Description | Valeur par défaut |
+|----------|-------------|-------------------|
+| `API_HOST` | Hôte de l'API | `0.0.0.0` |
+| `API_PORT` | Port de l'API | `8000` |
+| `LLM_PROVIDER` | Backend LLM | `ollama` |
+| `LLM_MODEL` | Modèle LLM | `llama3.1:8b` |
+| `GROQ_API_KEY` | Clé Groq (optionnel) | non défini |
+| `EMBEDDING_MODEL` | Modèle d'embeddings | `paraphrase-multilingual-MiniLM-L12-v2` |
+| `CHROMA_PERSIST_DIRECTORY` | Dossier ChromaDB | `./data/vector_db` |
+| `ENABLE_AUTH` | Auth JWT | `false` (dev) |
 
-## API Usage
+## Utilisation de l'API
 
-### Chat Endpoint
+Base URL : `http://localhost:8000`
+
+Endpoints principaux :
+- `GET /` : informations de l'API
+- `POST /api/v1/chat/` : chat
+- `GET /api/v1/chat/stats` : statistiques
+- `GET /api/v1/chat/examples` : exemples
+- `GET /api/v1/health/` : health check
+- `GET /api/v1/health/ready` : readiness
+- `GET /api/v1/health/live` : liveness
+- `GET /api/v1/health/version` : version
+
+### Endpoint de chat
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/chat/ \
   -H "Content-Type: application/json" \
-  -d '{
-    "message": "What do you think about AI?",
-    "use_llm": true,
-    "n_results": 5
-  }'
+  -d "{\"message\": \"Que penses-tu de l'IA ?\", \"use_llm\": true, \"n_results\": 5, \"temperature\": 0.7, \"max_tokens\": 500}"
 ```
 
-### Health Check
+### Health check
 
 ```bash
 curl http://localhost:8000/api/v1/health/
 ```
 
-## Docker Deployment
+## Architecture (résumé)
+
+Le projet suit une architecture en couches (présentation → services → données) et un pipeline RAG en 2 phases.
+
+```
+Indexation (offline) :
+CSV Reddit -> Nettoyage -> Embeddings -> ChromaDB
+
+Inférence (online) :
+Question -> Validation -> Embedding -> Recherche -> Contexte -> LLM -> Réponse
+```
+
+Pour le détail, voir `docs/ARCHITECTURE.md`.
+
+## Déploiement Docker
 
 ```bash
-# Build and run with Docker Compose
 docker-compose -f docker/docker-compose.yml up -d
-
-# View logs
 docker-compose -f docker/docker-compose.yml logs -f
 ```
 
-## Development
-
-### Setup Development Environment
+## Développement
 
 ```bash
-# Install dev dependencies
+# Dépendances dev
 pip install -e ".[dev]"
 
-# Install pre-commit hooks
+# Hooks pre-commit
 pre-commit install
 
-# Run tests
+# Tests
 pytest
 
-# Run linting
+# Linting
 ruff check .
 ruff format .
 
@@ -155,84 +170,16 @@ ruff format .
 mypy src/
 ```
 
-### Running Tests
-
-```bash
-# All tests
-pytest
-
-# With coverage
-pytest --cov=src --cov-report=html
-
-# Only unit tests
-pytest -m unit
-
-# Only integration tests
-pytest -m integration
-```
-
-## Architecture
-
-### RAG Pipeline
-
-```
-User Query
-    ↓
-Input Validation & Preprocessing
-    ↓
-Text Embedding (sentence-transformers)
-    ↓
-Vector Similarity Search (ChromaDB)
-    ↓
-Context Retrieval (top-k results)
-    ↓
-Response Generation
-    ├─→ Simple Mode: Best match response
-    └─→ LLM Mode: Generated with context
-    ↓
-Response with Sources & Metadata
-```
-
-### Components
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Embeddings | sentence-transformers | Text vectorization |
-| Vector Store | ChromaDB | Similarity search |
-| LLM | Ollama/OpenAI/Anthropic | Response generation |
-| API | FastAPI | REST interface |
-| UI | Gradio/Streamlit | Web interface |
-
-## Performance
-
-- **Search Latency**: < 100ms
-- **Dataset Size**: 56,295 conversations
-- **Embedding Dimension**: 384
-- **Supported Languages**: 60+
-
-## Benchmarking
+## Benchmark
 
 ```bash
 python scripts/benchmark.py
 ```
 
-## Contributing
+## Contribuer
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [sentence-transformers](https://www.sbert.net/) for multilingual embeddings
-- [ChromaDB](https://www.trychroma.com/) for vector storage
-- [FastAPI](https://fastapi.tiangolo.com/) for the API framework
-- [Gradio](https://gradio.app/) for the web interface
+1. Forker le dépôt
+2. Créer une branche (`git checkout -b feature/ma-feature`)
+3. Committer (`git commit -m 'Ma feature'`)
+4. Pousser la branche (`git push origin feature/ma-feature`)
+5. Ouvrir une Pull Request

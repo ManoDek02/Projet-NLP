@@ -91,12 +91,12 @@ class SearchResult(BaseModel):
     
     Attributes:
         conversation: Matched conversation
-        score: Similarity score (0-1)
+        score: Relevance score (can be negative for cross-encoders)
         distance: Distance metric
         rank: Result rank
     """
     conversation: Conversation
-    score: float = Field(..., ge=0, le=1)
+    score: float = Field(..., description="Relevance score (not necessarily normalized)")
     distance: Optional[float] = None
     rank: int = Field(..., ge=1)
     
