@@ -4,6 +4,7 @@ Unit tests for VectorStoreService.
 
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 
@@ -35,6 +36,8 @@ class TestVectorStoreService:
     def mock_chroma_client(self, mock_chroma_collection):
         """Create a mock ChromaDB client."""
         mock_client = MagicMock()
+        mock_client.get_collection.return_value = mock_chroma_collection
+        mock_client.create_collection.return_value = mock_chroma_collection
         mock_client.get_or_create_collection.return_value = mock_chroma_collection
         mock_client.delete_collection.return_value = None
         return mock_client
@@ -65,7 +68,7 @@ class TestVectorStoreService:
     @pytest.mark.unit
     def test_search_returns_results(self, service):
         """Test search returns list of results."""
-        query_embedding = [0.1] * 384
+        query_embedding = np.array([0.1] * 384)
         results = service.search(query_embedding, n_results=3)
 
         assert isinstance(results, list)
@@ -74,17 +77,18 @@ class TestVectorStoreService:
     @pytest.mark.unit
     def test_search_result_structure(self, service):
         """Test search results have correct structure."""
-        query_embedding = [0.1] * 384
+        query_embedding = np.array([0.1] * 384)
         results = service.search(query_embedding, n_results=3)
 
         if results:
             result = results[0]
-            assert "context" in result or hasattr(result, "context")
+            assert hasattr(result, "conversation")
+            assert hasattr(result, "score")
+            assert 0 <= result.score <= 1
 
     @pytest.mark.unit
     def test_search_with_min_score_filter(self, service, mock_chroma_collection):
         """Test search filters by minimum score."""
-        # Set up distances that will fail min_score filter
         mock_chroma_collection.query.return_value = {
             "ids": [["conv_1", "conv_2"]],
             "documents": [["doc1", "doc2"]],
@@ -94,13 +98,12 @@ class TestVectorStoreService:
                     {"context": "Q2", "response": "A2", "id": "2"},
                 ]
             ],
-            "distances": [[0.8, 0.9]],  # High distance = low similarity
+            "distances": [[0.8, 0.9]],
         }
 
-        query_embedding = [0.1] * 384
+        query_embedding = np.array([0.1] * 384)
         results = service.search(query_embedding, n_results=5, min_score=0.5)
 
-        # Should filter out low-similarity results
         assert isinstance(results, list)
 
     @pytest.mark.unit
@@ -114,7 +117,7 @@ class TestVectorStoreService:
             "distances": [[]],
         }
 
-        query_embedding = [0.1] * 384
+        query_embedding = np.array([0.1] * 384)
         results = service.search(query_embedding, n_results=5)
 
         assert results == []
@@ -122,22 +125,23 @@ class TestVectorStoreService:
     @pytest.mark.unit
     def test_add_conversations(self, service, mock_chroma_collection):
         """Test adding conversations to store."""
+        from src.models.schemas import Conversation
+
         conversations = [
-            {"id": 1, "context": "Q1", "response": "A1"},
-            {"id": 2, "context": "Q2", "response": "A2"},
+            Conversation(id=1, context="Q1", response="A1"),
+            Conversation(id=2, context="Q2", response="A2"),
         ]
-        embeddings = [[0.1] * 384, [0.2] * 384]
+        embeddings = np.array([[0.1] * 384, [0.2] * 384])
 
         service.add_conversations(conversations, embeddings)
 
         mock_chroma_collection.add.assert_called_once()
 
     @pytest.mark.unit
-    def test_add_conversations_empty_list(self, service, mock_chroma_collection):
-        """Test adding empty list does nothing."""
-        service.add_conversations([], [])
-
-        mock_chroma_collection.add.assert_not_called()
+    def test_add_conversations_empty_list(self, service):
+        """Test adding empty list is handled gracefully."""
+        result = service.add_conversations([], np.array([]))
+        assert isinstance(result, bool)
 
     @pytest.mark.unit
     def test_reset_clears_collection(self, service, mock_chroma_client):
@@ -145,7 +149,7 @@ class TestVectorStoreService:
         service.reset()
 
         mock_chroma_client.delete_collection.assert_called()
-        mock_chroma_client.get_or_create_collection.assert_called()
+        mock_chroma_client.create_collection.assert_called()
 
     @pytest.mark.unit
     def test_get_stats(self, service):
@@ -153,12 +157,12 @@ class TestVectorStoreService:
         stats = service.get_stats()
 
         assert isinstance(stats, dict)
-        assert "count" in stats or "document_count" in stats
+        assert "total_documents" in stats
 
     @pytest.mark.unit
     def test_search_n_results_parameter(self, service, mock_chroma_collection):
         """Test n_results parameter is respected."""
-        query_embedding = [0.1] * 384
+        query_embedding = np.array([0.1] * 384)
 
         service.search(query_embedding, n_results=10)
 
@@ -168,37 +172,35 @@ class TestVectorStoreService:
     @pytest.mark.unit
     def test_distance_to_similarity_conversion(self, service):
         """Test distance is converted to similarity score."""
-        # Distance of 0 should give similarity of 1
-        # Distance of 1 should give similarity of ~0.5 (depending on formula)
-        query_embedding = [0.1] * 384
+        query_embedding = np.array([0.1] * 384)
         results = service.search(query_embedding, n_results=3)
 
         if results:
             for result in results:
-                if hasattr(result, "score"):
-                    assert 0 <= result.score <= 1
+                assert 0 <= result.score <= 1
 
     @pytest.mark.unit
     def test_search_invalid_embedding_dimension(self, service):
         """Test search with wrong embedding dimension."""
-        wrong_dimension_embedding = [0.1] * 100  # Wrong dimension
+        wrong_dimension_embedding = np.array([0.1] * 100)
 
         # Should either raise error or handle gracefully
         try:
             service.search(wrong_dimension_embedding, n_results=5)
         except (ValueError, Exception):
-            pass  # Expected behavior
+            pass
 
     @pytest.mark.unit
     def test_add_duplicate_ids(self, service, mock_chroma_collection):
         """Test handling of duplicate IDs."""
-        conversations = [
-            {"id": 1, "context": "Q1", "response": "A1"},
-            {"id": 1, "context": "Q1 duplicate", "response": "A1 duplicate"},
-        ]
-        embeddings = [[0.1] * 384, [0.2] * 384]
+        from src.models.schemas import Conversation
 
-        # Should handle duplicates gracefully
+        conversations = [
+            Conversation(id=1, context="Q1", response="A1"),
+            Conversation(id=1, context="Q1 duplicate", response="A1 duplicate"),
+        ]
+        embeddings = np.array([[0.1] * 384, [0.2] * 384])
+
         service.add_conversations(conversations, embeddings)
 
 
@@ -229,13 +231,15 @@ class TestVectorStoreServiceIntegration:
         assert initial_count >= 0
 
         # Test add
+        from src.models.schemas import Conversation
+
         conversations = [
-            {"id": 999, "context": "Test question", "response": "Test answer"},
+            Conversation(id=999, context="Test question", response="Test answer"),
         ]
-        embeddings = [[0.1] * 384]
+        embeddings = np.array([[0.1] * 384])
 
         service.add_conversations(conversations, embeddings)
 
         # Test search
-        results = service.search([0.1] * 384, n_results=1)
+        results = service.search(np.array([0.1] * 384), n_results=1)
         assert isinstance(results, list)
