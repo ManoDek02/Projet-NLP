@@ -22,8 +22,8 @@ A production-ready Retrieval-Augmented Generation (RAG) chatbot built on Reddit 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/reddit-rag-chatbot.git
-cd reddit-rag-chatbot
+git clone https://github.com/ManoDek02/Projet-NLP.git
+cd Projet-NLP
 
 # Create virtual environment
 python -m venv venv
@@ -55,13 +55,13 @@ python scripts/index_conversations.py
 python run_api.py
 
 # In another terminal, start UI
-python run_ui.py
+python run_frontend.py
 ```
 
 Access:
 - **API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
-- **Gradio UI**: http://localhost:7861
+- ** UI**: http://localhost:3000
 
 ## Project Structure
 
@@ -101,7 +101,7 @@ All configuration is managed via environment variables. See `.env.example` for a
 | `LLM_MODEL` | Model name | `llama3.2` |
 | `EMBEDDING_MODEL` | Embedding model | `paraphrase-multilingual-MiniLM-L12-v2` |
 | `API_PORT` | API server port | `8000` |
-| `UI_PORT` | UI server port | `7861` |
+| `UI_PORT` | UI server port | `3000` |
 
 ## API Usage
 
@@ -201,7 +201,7 @@ Response with Sources & Metadata
 | Vector Store | ChromaDB | Similarity search |
 | LLM | Ollama/OpenAI/Anthropic | Response generation |
 | API | FastAPI | REST interface |
-| UI | Gradio/Streamlit | Web interface |
+| UI | HTML/CSS | Web interface |
 
 ## Performance
 
