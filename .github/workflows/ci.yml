@@ -50,7 +50,9 @@ jobs:
           pip install mypy types-requests
 
       - name: Run MyPy
-        run: mypy src/ --ignore-missing-imports
+        run: mypy --package src --ignore-missing-imports
+        env:
+          MYPYPATH: .
 
   test:
     name: Test

@@ -302,9 +302,7 @@ class ChatbotService:
             else:
                 score_label = f"{result.score:.3f}"
             context_parts.append(
-                f"Example {i} (relevance: {score_label}):\n"
-                f"Q: {conv.context}\n"
-                f"A: {conv.response}"
+                f"Example {i} (relevance: {score_label}):\nQ: {conv.context}\nA: {conv.response}"
             )
 
         return "\n\n".join(context_parts)

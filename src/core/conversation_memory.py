@@ -6,6 +6,7 @@ Maintains context across multiple interactions.
 import contextlib
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from uuid import uuid4
 
@@ -281,7 +282,7 @@ class SummarizingMemory:
     def __init__(
         self,
         base_memory: ConversationMemory,
-        summarizer: callable | None = None,
+        summarizer: Callable | None = None,
         summary_threshold: int = 10,
         keep_recent: int = 5,
     ):

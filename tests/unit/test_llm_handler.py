@@ -13,19 +13,19 @@ class TestLLMService:
 
     @pytest.fixture
     def mock_ollama(self):
-        """Create mock Ollama module."""
+        """Create mock Ollama module and keep it active."""
         mock = MagicMock()
         mock.chat.return_value = {"message": {"content": "This is a test response from LLM."}}
         mock.list.return_value = {"models": [{"name": "llama3.2"}]}
-        return mock
+        with patch.dict(sys.modules, {"ollama": mock}):
+            yield mock
 
     @pytest.fixture
     def service(self, mock_ollama):
         """Create LLMService with mocked Ollama."""
-        with patch.dict(sys.modules, {"ollama": mock_ollama}):
-            from src.core.llm_handler import LLMService
+        from src.core.llm_handler import LLMService
 
-            return LLMService()
+        return LLMService()
 
     @pytest.mark.unit
     def test_initialization(self, service):
