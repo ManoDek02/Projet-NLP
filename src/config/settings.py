@@ -85,7 +85,7 @@ class Settings(BaseSettings):
 
     # ==================== UI ====================
     UI_HOST: str = "127.0.0.1"
-    UI_PORT: int = 7861
+    UI_PORT: int = 3000
     UI_SHARE: bool = False
     UI_THEME: str = "soft"
 
