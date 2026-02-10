@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 500
     LLM_TIMEOUT: int = 60  # seconds (increased for larger model)
     OLLAMA_BASE_URL: str = "http://localhost:11434"  # Ollama server URL
-    GROQ_API_KEY: str | None = "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"  # Groq API key (free at console.groq.com)
+    GROQ_API_KEY: str | None = None  # Groq API key (free at console.groq.com)
 
     # ==================== RERANKER ====================
     RERANKER_ENABLED: bool = True
