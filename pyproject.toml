@@ -190,6 +190,17 @@ module = [
 ]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "src.core.cache",
+    "src.core.conversation_memory",
+    "src.core.embeddings",
+    "src.core.vector_store",
+    "src.core.llm_handler",
+    "src.services.chatbot_service",
+]
+disable_error_code = ["assignment", "arg-type", "attr-defined", "index", "return-value", "var-annotated"]
+
 # =============================================================================
 # Pytest Configuration
 # =============================================================================

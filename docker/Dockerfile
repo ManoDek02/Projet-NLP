@@ -51,7 +51,7 @@ COPY --chown=appuser:appuser frontend/ frontend/
 COPY --chown=appuser:appuser scripts/ scripts/
 COPY --chown=appuser:appuser run_api.py .
 COPY --chown=appuser:appuser run_frontend.py .
-COPY --chown=appuser:appuser .env .
+COPY --chown=appuser:appuser .env* .
 
 # Switch to non-root user
 USER appuser
