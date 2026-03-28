@@ -1,5 +1,7 @@
 # Reddit RAG Chatbot
 
+[![gitcgr](https://gitcgr.com/badge/ManoDek02/Projet-NLP.svg)](https://gitcgr.com/ManoDek02/Projet-NLP)
+
 Chatbot RAG (Retrieval-Augmented Generation) basé sur des conversations Reddit, avec API FastAPI et frontend HTML/JS.
 
 ## Fonctionnalités
